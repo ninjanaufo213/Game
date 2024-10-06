@@ -13,31 +13,47 @@
 #include "MovingPlatform.hpp"
 #include "HealthBar.hpp"
 #include <SFML/Audio.hpp>
-
+#include <sstream>
 using namespace sf;
 
 // Dom dom Hoa hai duong
 void RunGame()
 {	
-	SoundBuffer buffer; // hold audio data
-	buffer.loadFromFile("D:/test3/files/nhachay.wav"); // load sound file into buffer
+	sf::Image imgscore;
+	imgscore.loadFromFile("files/images/score.png");
+	sf::Texture tscore;
+	imgscore.createMaskFromColor(sf::Color(255, 255, 255));
+	tscore.loadFromImage(imgscore);
+    sf::Sprite sscore;
+	sscore.setTexture(tscore);
+	SoundBuffer buffer; // hold audio data 
+	if (!buffer.loadFromFile("files/nhachay.wav")){
+		std::cerr << "Falled to loading sound file !";
+		return;
+	}
 	Sound sound; // create Sound object use buffer to play sound
 	sound.setBuffer(buffer); // associate loaded sound buffer with sound object
 	sound.setLoop(true); // run to die 
 	sound.setVolume(65); // medium rare
-	sound.play(); // play --> bat nhac hay and chillll
-	
-	// Create game window
-	RenderWindow window(VideoMode(450, 280), "Game do hoa mot nguoi");
-
-	View view( FloatRect(0, 0, 450, 280) ); // set up camera view
-
-	Level lvl; // Create level object
-	lvl.LoadFromFile("files/Level1.tmx"); // Load level from file
 	
 	// Load textures (ket cau)
 	Texture enemy_t, moveplatform_t, megaman_t, bullet_t, bg;
-	bg.loadFromFile("files/images/bg.png");
+	
+	// Create game window
+	RenderWindow window(VideoMode(450, 280), "Game do hoa mot nguoi");
+	View view( FloatRect(0, 0, 450, 280) ); // set up camera view
+
+	Level lvl; // Create level object
+	if (cnt>5){
+		lvl.LoadFromFile("files/Level2.tmx");
+		bg.loadFromFile("files/images/bg3.png");
+		sound.play(); // play --> bat nhac hay and chillll
+	}else{
+		lvl.LoadFromFile("files/Level1.tmx");
+		bg.loadFromFile("files/images/bg.png");
+		sound.play(); // play --> bat nhac hay and chillll
+	} // Load level from file
+
 	enemy_t.loadFromFile("files/images/enemy.png");
 	moveplatform_t.loadFromFile("files/images/movingPlatform.png");
 	megaman_t.loadFromFile("files/images/megaman.png");
@@ -92,7 +108,12 @@ void RunGame()
 	
 	// manage time in game
 	Clock clock;
-
+	sf::Text mytext;
+	sf::Font font;
+	font.loadFromFile("arial.ttf");
+	mytext.setFont(font);
+	mytext.setColor(sf::Color::Red);
+	
 	// keep running while game window is open
 	while (window.isOpen())
 	{
@@ -102,7 +123,7 @@ void RunGame()
 
 		time = time / 600;  // time scale down, get an appropriate unit for animation and movement speed
 
-		if (time > 40) time = 40; // avoid excessive time between frames (maintain smooth frame rate)
+		if (time > 60) time = 40; // avoid excessive time between frames (maintain smooth frame rate)
 
 		Event event;
 		// loop checks for any pending events (like key presses or closing window)
@@ -180,7 +201,7 @@ void RunGame()
 							 { bullet->Health = 0; enemy->Health -= 5;}
 				}
 			}
-
+  
 			//2. Moving Platform collision
 			if ((*it)->Name=="MovingPlatform")
 			{
@@ -203,7 +224,7 @@ void RunGame()
 		// rendering game scene, including background, player(Mario), entities(enemies, platforms) and health bar
 		view.setCenter( Mario.x,Mario.y); // set view's center to Mario's current position
 		window.setView(view); // apply updated view to window
-		
+		sscore.setPosition(Mario.x-190,Mario.y-125);
 		// background is drawn behind all other objects
 		background.setPosition(view.getCenter()); // position background relative to camera's center, creating illusion that background moves with camera
 		window.draw(background); // draw background on the screen
@@ -214,16 +235,27 @@ void RunGame()
 		// iterates over all the enities in the entities list and draw each one
 		for(it=entities.begin();it!=entities.end();it++)
 			(*it)->draw(window); // draw each enity(enemies, moving platforms)
-
-		Mario.draw(window); // draw Mario
+		if (cnt < 10) mytext.setPosition(Mario.x-156,Mario.y-108);
+		else mytext.setPosition(Mario.x-166,Mario.y-108);
+		Mario.draw(window); // draw Mario      
 		healthBar.draw(window);
-		
+		 std::stringstream ss;  // #include <sstream>
+		ss << cnt;
+		sscore.setScale(0.5,0.5);
+		mytext.setString( ss.str().c_str());
+		window.draw(sscore);
+		window.draw(mytext);
 		// final step that makes all rendered elements appear on the screen
-		window.display(); // display rendered frame on the screen
+		window.display(); 
+		if (cnt==5){
+			cnt++;
+			window.close();
+			sound.stop();
+			RunGame();
+		}// display rendered frame on the screen
 	}
 
 
 }
 // end game het phim Toan xai tech Toan nhech
 #endif GAME_H
-
