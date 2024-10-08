@@ -3,7 +3,7 @@
 
 #include "Entity.hpp"
 
-//hello word
+//inherit from entity class
 class PLAYER: public Entity
 {
 public:
@@ -17,7 +17,7 @@ public:
         STATE=stay; hit=false;
 		obj = lev.GetAllObjects();
 	}
-
+	// change state varible and speed of megaman
 	void Keyboard()
 	{
 		if (key["L"])
@@ -36,7 +36,7 @@ public:
 
 		if (key["Up"])
 		{
-			if (onLadder) STATE=climb;
+			if (onLadder) STATE=climb;//check if megaman is onLadder or not
 			if (STATE==stay || STATE==walk) { dy=-0.27; STATE=jump; anim.play("jump");}
 			if (STATE==climb) dy=-0.05;
 			if (STATE==climb) if (key["L"] || key["R"]) STATE=stay;
@@ -53,7 +53,7 @@ public:
 			shoot=true;
 		}
 
-		/////////////////////???? ??????? ????????///////////////////////////
+		//
 		if (!(key["R"] || key["L"]))
 		{
 			dx=0;
@@ -95,7 +95,7 @@ public:
 
 		if (dir) anim.flip();
 
-		anim.tick(time);
+		anim.tick(time);//update animation
     }
 
 	void update(float time)
@@ -104,17 +104,20 @@ public:
 
         Animation(time);
 
-		if (STATE==climb) if (!onLadder) STATE=stay;
-        if (STATE!=climb) dy+=0.0005*time;
+		if (STATE==climb) if (!onLadder) STATE=stay;//
+        if (STATE!=climb) dy+=0.0005*time;//gravity effect
         onLadder=false;
+		//collison with solid
+		
+		
+		
+		x+=dx*time;//update moving player
+		Collision(0);//collision with horizontally solid
 
-		x+=dx*time;
-		Collision(0);
-
-		y+=dy*time;
-		Collision(1);
+		y+=dy*time;//update moving player
+		Collision(1);//collision with vertical solid
 	}
-
+// collision of two entity
 	void Collision(int num)
 	{
 		for (int i=0;i<obj.size();i++)
@@ -122,14 +125,14 @@ public:
 			{
 				if (obj[i].name=="solid")
 				{
-					if (dy>0 && num==1)	{ y = obj[i].rect.top -  h;  dy=0;   STATE=stay;}
-					if (dy<0 && num==1)	{ y = obj[i].rect.top + obj[i].rect.height ;   dy=0;}
+					if (dy>0 && num==1)	{ y = obj[i].rect.top -  h;  dy=0;   STATE=stay;}//player above solid
+					if (dy<0 && num==1)	{ y = obj[i].rect.top + obj[i].rect.height ;   dy=0;}//player in bottom of solid
 					if (dx>0 && num==0)	{ x =  obj[i].rect.left -  w; }
 					if (dx<0 && num==0)	{ x =  obj[i].rect.left + obj[i].rect.width ;}
 				}
 
-				if (obj[i].name=="ladder")	{ onLadder=true; if (STATE==climb) x=obj[i].rect.left-10; }
-
+				if (obj[i].name=="ladder")	{ onLadder=true; if (STATE==climb) x=obj[i].rect.left-10; }//onladder state
+				//collision with slope on the left side
 				if (obj[i].name=="SlopeLeft")
 				{  FloatRect r = obj[i].rect;
 				   int y0 = (x+w/2-r.left) * r.height/r.width+ r.top - h;
@@ -137,7 +140,7 @@ public:
 					  if (x+w/2>r.left)
 					   {y = y0; dy=0; STATE=stay;}
 				}
-
+				//collision with slope on the right side
 				if (obj[i].name=="SlopeRight")
 				{   FloatRect r = obj[i].rect;
 					int y0 = - (x+w/2-r.left) * r.height/r.width + r.top+r.height - h;
