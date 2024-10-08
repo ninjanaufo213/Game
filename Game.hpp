@@ -1,6 +1,5 @@
 #ifndef GAME_H
 #define GAME_H
-
 #include <SFML/Graphics.hpp>
 #include <vector>
 #include <list>
@@ -13,9 +12,8 @@
 #include "MovingPlatform.hpp"
 #include "HealthBar.hpp"
 #include <SFML/Audio.hpp>
-#include <sstream>
+#include "Result.hpp"
 using namespace sf;
-
 // Dom dom Hoa hai duong
 void RunGame()
 {	
@@ -42,7 +40,7 @@ void RunGame()
 	// Create game window
 	RenderWindow window(VideoMode(450, 280), "Game do hoa mot nguoi");
 	View view( FloatRect(0, 0, 450, 280) ); // set up camera view
-
+	Result res_score;
 	Level lvl; // Create level object
 	if (cnt>5){
 		lvl.LoadFromFile("files/Level2.tmx");
@@ -123,14 +121,17 @@ void RunGame()
 
 		time = time / 600;  // time scale down, get an appropriate unit for animation and movement speed
 
-		if (time > 60) time = 40; // avoid excessive time between frames (maintain smooth frame rate)
+		if (time > 40) time = 40; // avoid excessive time between frames (maintain smooth frame rate)
 
 		Event event;
 		// loop checks for any pending events (like key presses or closing window)
 		while (window.pollEvent(event))
 		{
-			if (event.type == Event::Closed)
+			if (event.type == Event::Closed){
+				res_score.writescore(cnt);
 				window.close();
+			}
+				
 			
 			// press Space, new bullet object is created and added to the entities list
 			// position at Mario.x + 18 and Mario.y + 18
@@ -146,8 +147,8 @@ void RunGame()
 		if (Keyboard::isKeyPressed(Keyboard::W) || Keyboard::isKeyPressed(Keyboard::Up)) Mario.key["Up"] = true;
 		if (Keyboard::isKeyPressed(Keyboard::S) || Keyboard::isKeyPressed(Keyboard::Down)) Mario.key["Down"] = true;
 		if (Keyboard::isKeyPressed(Keyboard::Space)) Mario.key["Space"] = true;
-		
-
+		if (Keyboard::isKeyPressed(Keyboard::P)) res_score.fre=-1;
+		if (Keyboard::isKeyPressed(Keyboard::Escape)) res_score.fre=11;
 
 		for(it=entities.begin();it!=entities.end();)
 		{
@@ -246,13 +247,35 @@ void RunGame()
 		window.draw(sscore);
 		window.draw(mytext);
 		// final step that makes all rendered elements appear on the screen
-		window.display(); 
+		
+		if (res_score.fre==-1){
+			
+			// get maximum score
+			res_score.getmax(); 
+			
+			// draw rank image
+			res_score.Draw1(window,"files/images/rank.png",Mario.x-100,Mario.y-100);
+			
+			// draw score
+			res_score.Draw2(window,Mario.x-10,Mario.y-10);
+		}
+		if (Mario.Health==0){
+			
+			// write score to file
+			res_score.writescore(cnt);
+			window.close();
+			sound.stop();
+		}
+		
+		
+		
 		if (cnt==5){
 			cnt++;
 			window.close();
 			sound.stop();
 			RunGame();
 		}// display rendered frame on the screen
+		window.display(); 
 	}
 
 
