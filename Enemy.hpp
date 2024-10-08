@@ -3,7 +3,7 @@
 #include <SFML/Audio.hpp>
 #include <SFML/Graphics.hpp> // For displaying text
 #include "Entity.hpp"
-
+int cnt = 0;
 
 // ENEMY class inheriting from Entity
 class ENEMY : public Entity
@@ -40,10 +40,11 @@ public:
         option("Enemy", 0.01, 15, "move");
 
         // Load sound file into buffer
-        if (!buffer.loadFromFile("D:/test3/files/siu.wav"))
+        if (!buffer.loadFromFile("files/siu.wav"))
         {
             // Handle error if the file cannot be loaded
             std::cerr << "Error loading sound file!" << std::endl;
+            return;
         }
         sound.setBuffer(buffer); // associate loaded sound buffer with sound object
         sound.setVolume(500);    // set volume level
@@ -51,76 +52,46 @@ public:
 
     // Update function to control the enemy's behavior
     void update(float time)
-    {
-        // If the enemy is dead, track time to respawn
-        if (isDead)
-        {
-            isVisible = false; // Make the enemy invisible
-            timer_respawn += time; // Track respawn time
+	{
+		// Update position based on its velocity (speed) and time
+		x += dx * time;
+		
+		// Increment the timer to track movement direction change
+		timer += time;
+		
+		// Reverse direction every 3200 units of time (3.2s)
+		if (timer > 3200)
+		{
+			dx *= -1; // Reverse direction
+			timer = 0;
+		}
+		
+		// If health is less than or equal to 0, mark the enemy as dead
+		if (Health <= 0 && !isDead)
+		{
+			anim.set("dead");  // Switch animation to "dead"
+			dx = 0;            // Stop movement
+			cnt++;              // Increment cnt only once when the enemy dies
+			sound.play();       // Play the death sound
+			isDead = true;      // Mark as dead to prevent cnt from increasing again
+			timer_end = 0;      // Reset death timer
+		}
+		
+		// If enemy is dead, count time to make it disappear after 4 seconds
+		if (isDead)
+		{
+			timer_end += time;
+			if (timer_end > 4000)
+			{
+				life = false;  // Make the enemy disappear after 4 seconds
+			}
+		}
+		
+		// Update the animation based on elapsed time
+		anim.tick(time);
+	}
+	
 
-            if (timer_respawn > 3000)
-            {
-                respawn(); // Respawn after 3 seconds
-            }
-
-            return; // Skip the rest of the update logic while dead
-        }
-
-        // Update position based on its velocity (speed) and time
-        x += dx * time;
-
-        // Increment the timer to track movement direction change
-        timer += time;
-
-        // Reverse direction every 3200 units of time (3.2s)
-        if (timer > 3200)
-        {
-            dx *= -1; // Reverse direction
-            timer = 0;
-        }
-
-        // If health is less than or equal to 0, mark the enemy as dead
-        if (Health <= 0 && !isDead)
-        {
-            anim.set("dead"); // Switch animation to "dead"
-            dx = 0;           // Stop movement
-            isDead = true;     // Mark enemy as dead
-            timer_end = 0;     // Reset death timer
-
-            sound.play();
-            
-        }
-
-        // Track how long the enemy has been "dead"
-        if (isDead)
-        {
-            timer_end += time;
-
-            if (timer_end > 4000)
-            {
-                isDead = true;      // Mark enemy as permanently dead
-                timer_respawn = 0;  // Start the respawn timer
-            }
-        }
-
-        // Update the animation based on elapsed time
-        anim.tick(time);
-    }
-
-    // Respawn the enemy with full health at the initial position
-    void respawn()
-    {
-        Health = 15;        // Reset health
-        x = initial_x;      // Reset to initial x position
-        y = initial_y;      // Reset to initial y position
-        anim.set("move");   // Set animation to "move"
-        dx = 0.01;          // Reset speed
-        isDead = false;     // Bring the enemy back to life
-        isVisible = true;   // Make the enemy visible again
-        timer_respawn = 0;  // Reset respawn timer
-        timer_end = 0;      // Reset death timer
-        soundPlayed = false; // Reset the sound played flag for the next death
-    }
 };
 
 #endif // ENEMY_H
