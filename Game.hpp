@@ -17,6 +17,8 @@ using namespace sf;
 // Dom dom Hoa hai duong
 void RunGame()
 {	
+	float timer_end=0;
+	int check_end=0;
 	sf::Image imgscore;
 	imgscore.loadFromFile("files/images/score.png");
 	sf::Texture tscore;
@@ -39,7 +41,7 @@ void RunGame()
 	
 	// Create game window
 	RenderWindow window(VideoMode(450, 280), "Game do hoa mot nguoi");
-	View view( FloatRect(0, 0, 450, 280) ); // set up camera view
+	View view( FloatRect(200, 0, 450, 280) ); // set up camera view
 	Result res_score;
 	Level lvl; // Create level object
 	if (cnt>5){
@@ -181,7 +183,7 @@ void RunGame()
 						enemy->Health=0; // enemy is defeated
 					}
 				    else if (!Mario.hit) { // Mario is hit by enemy
-						Mario.Health-=5; // lose health
+						Mario.Health-=15; // lose health
 						Mario.hit=true; // set a flag to indicate Mario was hit
 						// Push Mario slightly to the left or right depending on his direction
 				        if (Mario.dir) Mario.x+=10; 
@@ -236,8 +238,16 @@ void RunGame()
 		// iterates over all the enities in the entities list and draw each one
 		for(it=entities.begin();it!=entities.end();it++)
 			(*it)->draw(window); // draw each enity(enemies, moving platforms)
-		if (cnt < 10) mytext.setPosition(Mario.x-156,Mario.y-108);
-		else mytext.setPosition(Mario.x-166,Mario.y-108);
+		
+		
+		if (cnt < 10) {
+			mytext.setPosition(Mario.x-156,Mario.y-108);
+		}
+		else {
+			mytext.setPosition(Mario.x-166,Mario.y-108);
+		}
+		
+		
 		Mario.draw(window); // draw Mario      
 		healthBar.draw(window);
 		 std::stringstream ss;  // #include <sstream>
@@ -249,26 +259,19 @@ void RunGame()
 		// final step that makes all rendered elements appear on the screen
 		
 		if (res_score.fre==-1){
-			
-			// get maximum score
-			res_score.getmax(); 
-			
-			// draw rank image
+			res_score.getmax();
 			res_score.Draw1(window,"files/images/rank.png",Mario.x-100,Mario.y-100);
-			
-			// draw score
 			res_score.Draw2(window,Mario.x-10,Mario.y-10);
 		}
-		if (Mario.Health==0){
-			
-			// write score to file
-			res_score.writescore(cnt);
-			window.close();
-			sound.stop();
+		if (Mario.Health<=0){
+			check_end=1;
+			timer_end+=time;
+			if (timer_end>=5000){
+					res_score.writescore(cnt);
+					window.close();
+			}
 		}
-		
-		
-		
+		if (check_end==1) res_score.Draw1(window,"files/images/rip.jpg",Mario.x-110,Mario.y-100);
 		if (cnt==5){
 			cnt++;
 			window.close();
